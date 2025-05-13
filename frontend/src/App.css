@@ -1,0 +1,156 @@
+.landingPageContainer {
+  width: 100vw;
+  height: 100vh;
+  background: url("/public/background.jpg");
+  background-repeat: no-repeat;
+  background-size: cover;
+  color: white;
+}
+
+.landingPageContainer nav {
+  padding-inline: 1.2rem;
+  padding-block: 1.6rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+}
+
+.landingPageContainer nav h2 {
+  font-size: 1.8rem;
+  font-weight: 500;
+}
+
+.landingPageContainer nav .navlist {
+  display: flex;
+  gap: 1.6rem;
+  cursor: pointer;
+
+}
+
+.landingMainContainer {
+  display: flex;
+  justify-content: space-between;
+  padding-inline: 3rem;
+  height: 80vh;
+  align-items: center;
+}
+
+.landingMainContainer>div:nth-child(1) {
+  font-size: 2.2rem;
+}
+
+.landingMainContainer>div:nth-child(1) div[role='button'] {
+  background: #D97500;
+  width: fit-content;
+  padding: 1rem;
+  border-radius: 20px;
+  margin-top: 1.9rem;
+}
+
+.landingMainContainer>div:nth-child(1) div[role='button'] a {
+  text-decoration: none;
+  color: white;
+  font-size: 1.7rem;
+}
+
+.landingMainContainer>div:nth-child(2) img {
+  height: 70vh;
+  width: auto;
+}
+
+.navBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-inline: 20px;
+  text-align: center;
+
+}
+/* .meetContainer {
+  display: flex;
+  padding-inline: 20px;
+  height: 80vh;
+  gap: 10vw;
+  justify-content: center;
+
+  
+} */
+
+.meetContainer {
+  height: 100vh;
+  display: flex;
+  /* background-image: url('/hi.jpg'); Make sure background.jpg is in your public folder */
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  padding: 40px;
+  color: rgb(0, 0, 0);
+}
+
+.leftPanel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 20px;
+  padding: 30px;
+  backdrop-filter: blur(6px);
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 20px;
+  margin-right: 20px;
+}
+
+.rightPanel {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.rightPanel img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 20px;
+}
+
+
+
+
+.leftPanel {
+  height: 100%;
+  display: flex;
+  align-items: center;
+
+}
+
+.rightPanel {
+  display: flex;
+  align-items: center;
+}
+
+.rightPanel > img {
+  width: 30vw;
+  height: auto;
+  border-radius: 20px;
+}
+
+/* App.css */
+
+body {
+  margin: 0;
+  font-family: 'Roboto', sans-serif;
+  background-color: #f5f5f5;
+}
+
+.landingPageContainer {
+  min-height: 100vh;
+}
+
+body {
+  margin: 0;
+  font-family: 'Roboto', sans-serif;
+  /* background: url('/background.jpg') no-repeat center center fixed; */
+  background-size: cover;
+  color: white;
+}
