@@ -1,2 +1,2 @@
-# Zoom-main
- 
+# Zoom
+A full stack video conferencing web application.
