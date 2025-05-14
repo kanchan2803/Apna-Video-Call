@@ -43,7 +43,7 @@ export default function VideoMeetComponent(){
 
     let [screen, setScreen] = useState();
 
-    let [showModal, setModal] = useState(true);
+    let [showModal, setModal] = useState(false);
 
     let [screenAvailable, setScreenAvailable] = useState();
 
@@ -51,7 +51,7 @@ export default function VideoMeetComponent(){
 
     let [message, setMessage] = useState("");
 
-    let [newMessages, setNewMessages] = useState(3);
+    let [newMessages, setNewMessages] = useState(0);
 
     let [askForUsername, setAskForUsername] = useState(true);
 
@@ -142,17 +142,23 @@ export default function VideoMeetComponent(){
         }
     };
 
-    useEffect(() => {
-        if (video !== undefined && audio !== undefined) {
-            getUserMedia();
-            console.log("SET STATE HAS ", video, audio);
+    // useEffect(() => {
+    //     if (video !== undefined && audio !== undefined) {
+    //         getUserMedia();
+    //         console.log("SET STATE HAS ", video, audio);
 
-        }
-    }, [video, audio])
+    //     }
+    // }, [video, audio])
 
     let getMedia = () => {
         setVideo(videoAvailable);
         setAudio(audioAvailable);
+
+        // Ensure getUserMedia is called after state update
+    setTimeout(() => {
+        getUserMedia(); // Call directly
+    }, 100); // small delay to wait for states to update
+
         connectToSocketServer();
     }
 
@@ -216,9 +222,11 @@ export default function VideoMeetComponent(){
             try {
                 let tracks = localVideoref.current.srcObject.getTracks()
                 tracks.forEach(track => track.stop())
-            } catch (e) { }
+            } catch (e) {
+                console.log(e);
+             }
         }
-    }
+    };
 
 let getDisplayMediaSuccess = (stream) => {
         console.log("HERE")
@@ -268,7 +276,7 @@ let getDisplayMediaSuccess = (stream) => {
         .catch((e) => console.log("getDisplayMedia error:", e))
     }
   } 
-
+// chat related
     let gotMessageFromServer = (fromId, message) => {
         var signal = JSON.parse(message)
 
@@ -291,7 +299,6 @@ let getDisplayMediaSuccess = (stream) => {
         }
     }
 
-
     let connectToSocketServer = () => {
         socketRef.current = io.connect(server_url, { secure: false })
 
@@ -307,6 +314,10 @@ let getDisplayMediaSuccess = (stream) => {
             socketRef.current.on("chat-message", (data, sender, socketIdSender) => {
                 console.log("Received chat message:", data, sender);
                 addMessage(data, sender, socketIdSender);
+
+            if (!showModal) {
+                setNewMessages(prev => prev + 1); // only increase if chat is closed
+            }
             });
             
 
@@ -464,6 +475,7 @@ let getDisplayMediaSuccess = (stream) => {
     }
 
     let handleVideo = () => {
+        
         if (window.localStream) {
       window.localStream.getVideoTracks().forEach((track) => {
         track.enabled = !video
@@ -473,6 +485,7 @@ let getDisplayMediaSuccess = (stream) => {
         // getUserMedia();
     }
     let handleAudio = () => {
+        
         if (window.localStream) {
       window.localStream.getAudioTracks().forEach((track) => {
         track.enabled = !audio
@@ -496,7 +509,7 @@ let getDisplayMediaSuccess = (stream) => {
             let tracks = localVideoref.current.srcObject.getTracks()
             tracks.forEach(track => track.stop())
         } catch (e) { }
-        window.location.href = "/"
+        window.location.href = "/home"
     }
 
     let openChat = () => {
@@ -531,23 +544,24 @@ let getDisplayMediaSuccess = (stream) => {
     // }
     const addMessage = (data, sender, socketIdSender) => {
     console.log("Adding message:", data, sender, socketIdSender)
+
     setMessages((prevMessages) => [...prevMessages, { sender: sender || "Unknown", data: data }])
 
     if (socketIdSender !== socketIdRef.current && !showModal) {
       setNewMessages((prev) => prev + 1)
     }
-  }
+  };
 
     const sendMessage = () => {
-    if (!message.trim() || !socketRef.current) return
+    if (!message.trim() || !socketRef.current) return;
 
     console.log("Sending message:", message, username)
     socketRef.current.emit("chat-message", message, username)
 
     // Add own message to chat
-    addMessage(message, username, socketIdRef.current)
+    // addMessage(message, username, socketIdRef.current)
 
-    setMessage("")
+    setMessage("");
   }
     
     const connect = async (username) => {
@@ -567,248 +581,14 @@ let getDisplayMediaSuccess = (stream) => {
         <div>
 
             {askForUsername ?(
-
-                // <div>
-
-                //     {/* Entering the lobby and entering name before joining */}
-
-                //     {/* <h2 style={{ color: 'blue' }}>Enter into Lobby</h2>
-                //     <TextField id="outlined-basic" label="Username" value={username} onChange={e => setUsername(e.target.value)} variant="outlined" />
-                //     <Button variant="contained" onClick={connect}>Connect</Button> */}
-                //     <div style={{ 
-                //         minHeight: '100vh', 
-                //         background: 'linear-gradient(to right, #141e30, #243b55)', 
-                //         display: 'flex', 
-                //         justifyContent: 'center', 
-                //         alignItems: 'center',
-                //         position: 'relative',
-                //         overflow: 'hidden',
-                //         padding: '20px'
-                //     }}>
-                //         {/* Optional floating background elements */}
-                //         <div style={{
-                //             position: 'absolute',
-                //             width: '200px',
-                //             height: '200px',
-                //             backgroundColor: '#d0e7ff',
-                //             borderRadius: '50%',
-                //             top: '-50px',
-                //             left: '-50px',
-                //             opacity: 0.3,
-                //             zIndex: 0
-                //         }}></div>
-                //         <div style={{
-                //             position: 'absolute',
-                //             width: '300px',
-                //             height: '300px',
-                //             backgroundColor: '#ffffff',
-                //             borderRadius: '50%',
-                //             bottom: '-100px',
-                //             right: '-100px',
-                //             opacity: 0.15,
-                //             zIndex: 0
-                //         }}></div>
-
-                //         {/* Main lobby card */}
-                //         <div style={{ 
-                //             backgroundColor: '#ffffff', 
-                //             padding: '40px', 
-                //             borderRadius: '16px', 
-                //             maxWidth: '420px', 
-                //             width: '100%',
-                //             textAlign: 'center',
-                //             boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
-                //             border: '1px solid #e0e0e0',
-                //             zIndex: 1
-                //         }}>
-                //             <h2 style={{ 
-                //                 color: '#1976d2', 
-                //                 marginBottom: '25px', 
-                //                 fontWeight: 600,
-                //                 fontSize: '26px'
-                //             }}>
-                //                 Enter the Lobby
-                //             </h2>
-                            
-                //             <TextField 
-                //                 id="username" 
-                //                 label="Enter Your Username" 
-                //                 value={username} 
-                //                 onChange={e => setUsername(e.target.value)} 
-                //                 variant="outlined" 
-                //                 fullWidth 
-                //                 sx={{ marginBottom: '24px' }} 
-                //             />
-                            
-                //             <Button 
-                //                 variant="contained" 
-                //                 onClick={connect} 
-                //                 fullWidth 
-                //                 disabled={!username.trim()}
-                //                 sx={{
-                //                     padding: '12px',
-                //                     fontWeight: 'bold',
-                //                     fontSize: '16px',
-                //                     backgroundColor: '#1976d2',
-                //                     '&:hover': {
-                //                         backgroundColor: '#115293'
-                //                     }
-                //                 }}
-                //             >
-                //                 Connect
-                //             </Button>
-                //         </div>
-                //     </div>
-
-
-                //     {/* <div style={{ 
-                //         backgroundColor: '#f0f4ff', 
-                //         padding: '40px', 
-                //         borderRadius: '10px', 
-                //         maxWidth: '400px', 
-                //         margin: '100px auto', 
-                //         textAlign: 'center',
-                //         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)' 
-                //     }}>
-                //         <h2 style={{ color: 'blue', marginBottom: '20px' }}>Enter into Lobby</h2>
-                        
-                //         <TextField 
-                //             id="outlined-basic" 
-                //             label="Username" 
-                //             value={username} 
-                //             onChange={e => setUsername(e.target.value)} 
-                //             variant="outlined" 
-                //             fullWidth 
-                //             style={{ marginBottom: '20px' }} 
-                //         />
-                        
-                //         <Button variant="contained" onClick={connect} fullWidth disabled ={!username.trim()}>Connect</Button>
-                //     </div> */}
-
-                //     <div>
-                //         {/* <video ref={localVideoref} autoPlay muted style = {{display:"none"}}></video> */}
-                //         <video 
-                //         ref={localVideoref} 
-                //         autoPlay 
-                //         muted 
-                //         playsInline 
-                //         style={{ 
-                //             marginTop: '30px',
-                //             width: '100%', 
-                //             maxHeight: '250px',
-                //             borderRadius: '12px',
-                //             objectFit: 'cover',
-                //             boxShadow: '0 4px 10px rgba(0,0,0,0.1)' 
-                //         }} 
-                //     />
-                //     </div>
-                // </div> 
+                
+                // entering the meeting
                 <LobbyComponent connect={connect} username={username} setUsername={setUsername} localVideoref={localVideoref} />
                 ):(
                 <div className={styles.meetVideoContainer}>
 
                     {/* chat */}
-
-                    {/* {showModal ? <div className={styles.chatRoom}>
-                        <div className={styles.chatContainer}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <h1>Chat</h1>
-                            <Button onClick={closeChat}>Close</Button>
-                </div>
-
-                            <div className={styles.chattingDisplay}>
-
-                                {messages.length !== 0 ? messages.map((item, index) => {
-                                    
-                                    console.log(messages)
-                                    return (
-                                        <div style={{ marginBottom: "20px", 
-                                            textAlign: item.sender === username ? "right" : "left",
-                          backgroundColor: item.sender === username ? "#e3f2fd" : "#f5f5f5",
-                          padding: "10px",
-                          borderRadius: "8px",
-                                        }} key={index}>
-                                            <p style={{ fontWeight: "bold" }}>{item.sender}</p>
-                                            <p>{item.data}</p>
-                                        </div>
-                                    )
-                                }) : (<p>No Messages Yet</p>)}
-
-                            </div>
-
-                            <div className={styles.chattingArea}>
-                                <TextField onKeyDown={(e) => e.key === 'Enter' && sendMessage()} value={message} onChange={(e) => setMessage(e.target.value)} id="outlined-basic" label="Enter Your chat" variant="outlined" />
-                                <Button variant='contained' onClick={sendMessage}>Send</Button>
-                            </div>
-                        </div>
-                    </div> 
-                    : <></>} */}
-                    {/* )} */}
-
-                    {/* {showModal && (
-  <div className={styles.chatRoom}>
-    <div className={styles.chatContainer}>
-      <div style={{
-        display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #ccc", padding: "10px 0"
-      }}>
-        <h2 style={{ margin: 0 }}>Chat Room</h2>
-        <Button variant="outlined" onClick={closeChat}>Close</Button>
-      </div>
-
-      <div className={styles.chattingDisplay} style={{
-        flex: 1,
-        overflowY: "auto",
-        padding: "15px",
-        maxHeight: "400px"
-      }}>
-        {messages.length ? (
-          messages.map((item, index) => (
-            <div
-              key={index}
-              style={{
-                marginBottom: "15px",
-                textAlign: item.sender === username ? "right" : "left"
-              }}
-            >
-              <div style={{
-                display: "inline-block",
-                backgroundColor: item.sender === username ? "#c8e6c9" : "#e3f2fd",
-                padding: "10px",
-                borderRadius: "12px",
-                maxWidth: "70%",
-                wordWrap: "break-word"
-              }}>
-                <p style={{ fontWeight: "bold", margin: "0 0 5px" }}>{item.sender}</p>
-                <p style={{ margin: 0 }}>{item.data}</p>
-              </div>
-            </div>
-          ))
-        ) : (
-          <p style={{ color: "#999", textAlign: "center" }}>No messages yet</p>
-        )}
-      </div>
-
-      <div className={styles.chattingArea} style={{
-        display: "flex", gap: "10px", marginTop: "10px", alignItems: "center"
-      }}>
-        <TextField
-          fullWidth
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          onKeyDown={(e) => {if(e.key === 'Enter'){
-            e.preventDefault();
-            sendMessage();
-          } 
-        }}
-          label="Type a message"
-          variant="outlined"
-        />
-        <Button variant="contained" onClick={sendMessage}>Send</Button>
-      </div>
-    </div>
-  </div>
-)} */}
-
+                    
                     <ChatBox
                         showModal={showModal}
                         closeChat={closeChat}
@@ -818,7 +598,7 @@ let getDisplayMediaSuccess = (stream) => {
                         setMessage={setMessage}
                         sendMessage={sendMessage}
                         addMessage={addMessage}
-                        />
+                    />
 
 
                     <div style={{ color: "white", textAlign: "center", marginBottom: "10px" }}>
@@ -841,8 +621,18 @@ let getDisplayMediaSuccess = (stream) => {
                                 {screen === true ? <ScreenShareIcon /> : <StopScreenShareIcon />}
                             </IconButton> : <></>}
 
-                        <Badge badgeContent={newMessages} max={999} color='orange'>
-                            <IconButton onClick={() => setModal(!showModal)} style={{ color: "white" }}>
+                        <Badge badgeContent={newMessages} sx={{ "& .MuiBadge-badge": { backgroundColor: 'orange', color: 'white' } }}>
+
+                            <IconButton onClick={() => {
+                                setModal(prev => {
+                                    const nextState = !prev;
+                                    if (nextState) {
+                                        setNewMessages(0); // reset badge count when modal opens
+                                    }
+                                    return nextState;
+                                });
+                            }} style={{ color: "white" }}>
+
                                 <ChatIcon />                        </IconButton>
                         </Badge>
 
