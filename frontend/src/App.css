@@ -154,3 +154,19 @@ body {
   background-size: cover;
   color: white;
 }
+
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f4f6f8;
+}
+
+button:hover, .MuiButton-root:hover {
+    opacity: 0.9;
+    transition: 0.3s;
+}
+
+input:focus {
+    outline: none;
+}
+
