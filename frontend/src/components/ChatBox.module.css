@@ -60,3 +60,42 @@
   display: inline-block;
   word-wrap: break-word;
 }
+
+.chatBoxContainer {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 300px;
+  background-color: #1e1e1e;
+  border-left: 2px solid #333;
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+  box-shadow: -2px 0 6px rgba(0, 0, 0, 0.5);
+}
+
+.chatBoxHidden {
+  display: none;
+}
+
+.chatBoxContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+@media (max-width: 768px) {
+  .chatBox {
+    width: 100%;
+    height: 100%;
+    bottom: 0;
+    right: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+   .chatBox {
+    width: 100% !important;
+    height: 300px;
+  }
+}

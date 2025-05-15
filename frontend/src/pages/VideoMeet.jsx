@@ -13,6 +13,7 @@ import StopScreenShareIcon from '@mui/icons-material/StopScreenShare'
 import ChatIcon from '@mui/icons-material/Chat'
 import server from '../environment';
 import LobbyComponent from '../components/LobbyComponent';
+import style from '../components/ChatBox.module.css';
 import ChatBox from '../components/ChatBox';
 
 const server_url = server;
@@ -71,14 +72,6 @@ export default function VideoMeetComponent(){
         console.log("HELLO")
         getPermissions();
     })
-
-    // useEffect(() => {
-    //     if (username) {
-    //         console.log(username);
-    //         getMedia(); // or connectToSocketServer directly
-    //     }
-    //     },);
-
     
     // Handle screen sharing state changes
    
@@ -209,81 +202,6 @@ export default function VideoMeetComponent(){
             }
         })
     }
-//     useEffect(() => {
-//     if (!localVideoref.current) return;
-
-//     navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-//         .then((stream) => {
-//             localVideoref.current.srcObject = stream;
-//             console.log("Stream set successfully");
-//         })
-//         .catch(console.error);
-// }, []);
-
-//     let getUserMediaSuccess = (stream) => {
-//     // Stop previous stream if any
-//     try {
-//         window.localStream?.getTracks?.().forEach(track => track.stop());
-//     } catch (e) {
-//         console.log("Error stopping previous stream:", e);
-//     }
-
-//     window.localStream = stream;
-
-    
-//     // if (localVideoref.current) {
-//     //     localVideoref.current.srcObject = stream;
-//     // } else {
-//     //     console.warn("localVideoref is undefined");
-//     //     return;
-//     // }
-
-//     // Use addTrack (not addStream) for modern browsers
-//     Object.keys(connections).forEach(id => {
-//         if (id === socketIdRef.current) return;
-
-//         const pc = connections[id];
-//         stream.getTracks().forEach(track => {
-//             try {
-//                 pc.addTrack(track, stream);
-//             } catch (e) {
-//                 console.log("addTrack error:", e);
-//             }
-//         });
-
-//         pc.createOffer().then(desc => {
-//             return pc.setLocalDescription(desc);
-//         }).then(() => {
-//             socketRef.current.emit("signal", id, JSON.stringify({ sdp: pc.localDescription }));
-//         }).catch(e => {
-//             console.log("Offer error:", e);
-//         });
-//     });
-// };
-
-
-// let getUserMedia = () => {
-//     if ((video && videoAvailable) || (audio && audioAvailable)) {
-//         navigator.mediaDevices.getUserMedia({ video, audio })
-//             .then(getUserMediaSuccess)
-//             .catch((e) => console.log("getUserMedia error:", e));
-//     } else {
-//         try {
-//             let tracks = localVideoref.current?.srcObject?.getTracks?.() || [];
-//             tracks.forEach(track => track.stop());
-//         } catch (e) {
-//             console.log("Cleanup error:", e);
-//         }
-//     }
-// };
-
-
-// // Call it after a small delay if needed
-// setTimeout(() => {
-//     getUserMedia();
-// }, 100);
-
-
 
     let getUserMedia = () => {
         if ((video && videoAvailable) || (audio && audioAvailable)) {
@@ -340,15 +258,6 @@ let getDisplayMediaSuccess = (stream) => {
 
         })
     }
-
-//     const getDisplayMedia = () => {
-//     if (screen && navigator.mediaDevices.getDisplayMedia) {
-//       navigator.mediaDevices
-//         .getDisplayMedia({ video: true, audio: true })
-//         .then(getDisplayMediaSuccess)
-//         .catch((e) => console.log("getDisplayMedia error:", e))
-//     }
-//   } 
 
 // chat related
     let gotMessageFromServer = (fromId, message) => {
@@ -515,20 +424,22 @@ let getDisplayMediaSuccess = (stream) => {
         
         if (window.localStream) {
       window.localStream.getVideoTracks().forEach((track) => {
-        track.enabled = !video
-      })
+        track.enabled = !track.enabled;
+        setVideo(track.enabled);
+      });
     }
-        setVideo(!video);
+        // setVideo(!video);
         // getUserMedia();
     }
     let handleAudio = () => {
         
             if (window.localStream) {
         window.localStream.getAudioTracks().forEach((track) => {
-            track.enabled = !audio
+            track.enabled = !track.enabled;
+            setAudio(track.enabled);
         })
         }
-        setAudio(!audio)
+        // setAudio(!audio)
         // getUserMedia();
     }
 
@@ -598,21 +509,12 @@ let getDisplayMediaSuccess = (stream) => {
                 // entering the meeting
                 <LobbyComponent connect={connect} username={username} setUsername={setUsername} localVideoref={localVideoref} />
                 ):(
-                <div className={styles.meetVideoContainer}>
 
-                    {/* chat */}
-                    
-                    <ChatBox
-                        showModal={showModal}
-                        closeChat={closeChat}
-                        messages={messages}
-                        username={username}
-                        message={message}
-                        setMessage={setMessage}
-                        sendMessage={sendMessage}
-                        addMessage={addMessage}
-                    />
+                <div className={`${styles.meetVideoContainer} ${showModal ? styles.chatOpen : ''}`}>
 
+                    <div className={styles.videoAndChatWrapper}>
+    
+    <div className={styles.videoSection}>
 
                     <div style={{ color: "white", textAlign: "center", marginBottom: "10px" }}>
                         <strong>Participants: {participantCount}</strong>
@@ -646,42 +548,58 @@ let getDisplayMediaSuccess = (stream) => {
                                 });
                             }} style={{ color: "white" }}>
 
-                                <ChatIcon />                        </IconButton>
+                                <ChatIcon />
+                            </IconButton>
                         </Badge>
 
                     </div>
 
 
                     <video 
-                    ref={localVideoref} autoPlay 
-                    muted
-                    className={styles.meetUserVideo}
+                        ref={localVideoref} 
+                        autoPlay 
+                        muted
+                        className={`${styles.meetUserVideo} ${showModal ? styles.chatOpen : ''}`}
                     >
-                    </video>
+                    </video>        
+                        <div className={styles.conferenceView}>
+                            {videos.map((video) => (
+                                <div key={video.socketId} className={styles.remoteVideoContainer}>
+                                    <video
+                                        className={styles.remoteVideo}
+                                        data-socket={video.socketId}
+                                        ref={ref => {
+                                            if (ref && video.stream) {
+                                                ref.srcObject = video.stream;
+                                            }
+                                        }}
+                                        autoPlay
+                                        playsInline
+                                        muted={video.isSelf}
+                                    >
+                                    </video>
+                                    {!video.stream && (
+                                        <div className={styles.noStreamOverlay}>No video</div>
+                                    )}
 
-                    <div className={styles.conferenceView}>
-                        {videos.map((video) => (
-                            <div key={video.socketId} className={styles.remoteVideoContainer}>
-                                <video
-                                    className={styles.remoteVideo}
-                                    data-socket={video.socketId}
-                                    ref={ref => {
-                                        if (ref && video.stream) {
-                                            ref.srcObject = video.stream;
-                                        }
-                                    }}
-                                    autoPlay
-                                    playsInline
-                                    muted={video.isSelf}
-                                >
-                                </video>
-                                {!video.stream && (
-                                    <div className={styles.noStreamOverlay}>No video</div>
-                                )}
+                                    <div className={styles.usernameOverlay}>{users[video.socketId]?.username || "Guest"}</div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
 
-                                <div className={styles.usernameOverlay}>{users[video.socketId]?.username || "Guest"}</div>
-                            </div>
-                        ))}
+                        {/* chat */}
+                        
+                            <ChatBox
+                                showModal={showModal}
+                                closeChat={closeChat}
+                                messages={messages}
+                                username={username}
+                                message={message}
+                                setMessage={setMessage}
+                                sendMessage={sendMessage}
+                                addMessage={addMessage}
+                            />
                     </div>
                 </div>
             )}

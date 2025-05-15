@@ -28,12 +28,14 @@ function LobbyComponent({ connect , username,setUsername}) {
 
     return (
         <div style={{ 
+            position: 'relative',
             minHeight: '100vh', 
             background: 'linear-gradient(to right, #141e30, #243b55)', 
             display: 'flex', 
             justifyContent: 'center', 
             alignItems: 'center',
-            padding: '20px'
+            padding: '20px',
+            overflow: 'hidden',
         }}>
             {/* Optional floating background elements */}
                         <div style={{
