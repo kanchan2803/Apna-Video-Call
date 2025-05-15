@@ -79,13 +79,15 @@ export default function VideoMeetComponent(){
     //     }
     //     },);
 
-    // Handle screen sharing state changes
     
-//   useEffect(() => {
-//     if (screen !== undefined && !askForUsername) {
-//       getDisplayMedia()
-//     }
-//   },)
+    // Handle screen sharing state changes
+   
+    // imp 
+  useEffect(() => {
+    if (screen !== undefined && !askForUsername) {
+      getDisplayMedia()
+    }
+  },)
 
     let getDisplayMedia = () => {
         if (screen) {
@@ -300,7 +302,7 @@ export default function VideoMeetComponent(){
     };
 
 let getDisplayMediaSuccess = (stream) => {
-        console.log("HERE")
+        console.log("HERE IN DISPLAY MEDIA SUCCESS");
         try {
             window.localStream.getTracks().forEach(track => track.stop())
         } catch (e) { console.log(e) }
