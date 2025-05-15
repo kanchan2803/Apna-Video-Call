@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { TextField, Button } from '@mui/material';
 
-function LobbyComponent({ connect }) {
-    const [username, setUsername] = useState('');
+function LobbyComponent({ connect , username,setUsername}) {
+    
     const localVideoref = useRef(null);
 
     useEffect(() => {

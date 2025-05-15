@@ -31,7 +31,7 @@ export default function VideoMeetComponent(){
     const [users, setUsers] = useState({});
     let socketIdRef = useRef();
 
-    let localVideoref = useRef();
+    let localVideoref = useRef(null);
 
     let [videoAvailable, setVideoAvailable] = useState(true);
 
@@ -61,7 +61,7 @@ export default function VideoMeetComponent(){
 
     let [videos, setVideos] = useState([])
 
-    let [participantCount, setParticipantCount] = useState(1); // including yourself
+    const participantCount = videos.length;
 
 
     // TODO
@@ -70,37 +70,33 @@ export default function VideoMeetComponent(){
     useEffect(() => {
         console.log("HELLO")
         getPermissions();
-    },[])
-    // Handle screen sharing state changes
-  useEffect(() => {
-    if (screen !== undefined && !askForUsername) {
-      getDisplayMedia()
-    }
-  }, [screen, askForUsername])
+    })
 
-    // let getDislayMedia = () => {
-    //     if (screen) {
-    //         if (navigator.mediaDevices.getDisplayMedia) {
-    //             navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
-    //                 .then(getDislayMediaSuccess)
-    //                 .then((stream) => { })
-    //                 .catch((e) => console.log(e))
-    //         }
+    // useEffect(() => {
+    //     if (username) {
+    //         console.log(username);
+    //         getMedia(); // or connectToSocketServer directly
     //     }
-    // }
+    //     },);
 
+    // Handle screen sharing state changes
     
+//   useEffect(() => {
+//     if (screen !== undefined && !askForUsername) {
+//       getDisplayMedia()
+//     }
+//   },)
 
-
-    // Handle video/audio state changes
-  useEffect(() => {
-    if (video !== undefined && audio !== undefined && !askForUsername) {
-      getUserMedia()
+    let getDisplayMedia = () => {
+        if (screen) {
+            if (navigator.mediaDevices.getDisplayMedia) {
+                navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
+                    .then(getDisplayMediaSuccess)
+                    .then((stream) => { })
+                    .catch((e) => console.log(e))
+            }
+        }
     }
-  }, [video, audio, askForUsername])
-
-// **
-    
 
     const getPermissions = async () => {
         try {
@@ -142,13 +138,13 @@ export default function VideoMeetComponent(){
         }
     };
 
-    // useEffect(() => {
-    //     if (video !== undefined && audio !== undefined) {
-    //         getUserMedia();
-    //         console.log("SET STATE HAS ", video, audio);
+    useEffect(() => {
+        if (video !== undefined && audio !== undefined) {
+            getUserMedia();
+            console.log("SET STATE HAS ", video, audio);
 
-    //     }
-    // }, [video, audio])
+        }
+    }, [video, audio])
 
     let getMedia = () => {
         setVideo(videoAvailable);
@@ -211,6 +207,81 @@ export default function VideoMeetComponent(){
             }
         })
     }
+//     useEffect(() => {
+//     if (!localVideoref.current) return;
+
+//     navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+//         .then((stream) => {
+//             localVideoref.current.srcObject = stream;
+//             console.log("Stream set successfully");
+//         })
+//         .catch(console.error);
+// }, []);
+
+//     let getUserMediaSuccess = (stream) => {
+//     // Stop previous stream if any
+//     try {
+//         window.localStream?.getTracks?.().forEach(track => track.stop());
+//     } catch (e) {
+//         console.log("Error stopping previous stream:", e);
+//     }
+
+//     window.localStream = stream;
+
+    
+//     // if (localVideoref.current) {
+//     //     localVideoref.current.srcObject = stream;
+//     // } else {
+//     //     console.warn("localVideoref is undefined");
+//     //     return;
+//     // }
+
+//     // Use addTrack (not addStream) for modern browsers
+//     Object.keys(connections).forEach(id => {
+//         if (id === socketIdRef.current) return;
+
+//         const pc = connections[id];
+//         stream.getTracks().forEach(track => {
+//             try {
+//                 pc.addTrack(track, stream);
+//             } catch (e) {
+//                 console.log("addTrack error:", e);
+//             }
+//         });
+
+//         pc.createOffer().then(desc => {
+//             return pc.setLocalDescription(desc);
+//         }).then(() => {
+//             socketRef.current.emit("signal", id, JSON.stringify({ sdp: pc.localDescription }));
+//         }).catch(e => {
+//             console.log("Offer error:", e);
+//         });
+//     });
+// };
+
+
+// let getUserMedia = () => {
+//     if ((video && videoAvailable) || (audio && audioAvailable)) {
+//         navigator.mediaDevices.getUserMedia({ video, audio })
+//             .then(getUserMediaSuccess)
+//             .catch((e) => console.log("getUserMedia error:", e));
+//     } else {
+//         try {
+//             let tracks = localVideoref.current?.srcObject?.getTracks?.() || [];
+//             tracks.forEach(track => track.stop());
+//         } catch (e) {
+//             console.log("Cleanup error:", e);
+//         }
+//     }
+// };
+
+
+// // Call it after a small delay if needed
+// setTimeout(() => {
+//     getUserMedia();
+// }, 100);
+
+
 
     let getUserMedia = () => {
         if ((video && videoAvailable) || (audio && audioAvailable)) {
@@ -268,14 +339,15 @@ let getDisplayMediaSuccess = (stream) => {
         })
     }
 
-    const getDisplayMedia = () => {
-    if (screen && navigator.mediaDevices.getDisplayMedia) {
-      navigator.mediaDevices
-        .getDisplayMedia({ video: true, audio: true })
-        .then(getDisplayMediaSuccess)
-        .catch((e) => console.log("getDisplayMedia error:", e))
-    }
-  } 
+//     const getDisplayMedia = () => {
+//     if (screen && navigator.mediaDevices.getDisplayMedia) {
+//       navigator.mediaDevices
+//         .getDisplayMedia({ video: true, audio: true })
+//         .then(getDisplayMediaSuccess)
+//         .catch((e) => console.log("getDisplayMedia error:", e))
+//     }
+//   } 
+
 // chat related
     let gotMessageFromServer = (fromId, message) => {
         var signal = JSON.parse(message)
@@ -305,62 +377,44 @@ let getDisplayMediaSuccess = (stream) => {
         socketRef.current.on('signal', gotMessageFromServer)
 
         socketRef.current.on('connect', () => {
+            console.log("Emitting join-call with username:", username)
             socketRef.current.emit('join-call', window.location.href, {
                 path: window.location.pathname,
-                username: username
-            })
+                username: username || "Guest"
+            });
             socketIdRef.current = socketRef.current.id
 
-            socketRef.current.on("chat-message", (data, sender, socketIdSender) => {
-                console.log("Received chat message:", data, sender);
-                addMessage(data, sender, socketIdSender);
+            // socketRef.current.on("chat-message", (data, sender, socketIdSender) => {
+            //     console.log("Received chat message:", data, sender);
+            //     addMessage(data, sender, socketIdSender);
 
-            if (!showModal) {
-                setNewMessages(prev => prev + 1); // only increase if chat is closed
-            }
-            });
+            // if (!showModal) {
+            //     setNewMessages(prev => prev + 1); // only increase if chat is closed
+            // }
+            // });
             
 
-            // socketRef.current.on('chat-message', addMessage)
+            socketRef.current.on('chat-message', addMessage)
 
             socketRef.current.on('user-left', (id) => {
                 setVideos((videos) => videos.filter((video) => video.socketId !== id))
-                setParticipantCount(prev => Math.max(1,prev - 1));
-
-                // remove user from users state
-                setUsers((prev) => {
-                    const newUsers = { ...prev };
-                    delete newUsers[id];
-                    return newUsers;
-                });
-                console.log("User left:", id);
-
+                // setParticipantCount(prev => Math.max(1,prev - 1));
             })
 
-            
-            // socketRef.current.on("user-joined", ({ id, username }, allUsers) => {
-            //     console.log("User joined:", username);
-            
-            //     // Save the username
-            //     setUsers(prev => ({
-            //         ...prev,
-            //         [id]: { username }
-            //     }));
-            
-            //     // Set up peer connection etc...
-            // });
-
             socketRef.current.on('user-joined', ({id, username: remoteUsername }, clients) => {
-                console.log("User joined:", remoteUsername);
+                console.log("received User joined:", remoteUsername);
                 // Save the username
                 setUsers(prev => ({
                     ...prev,
                     [id]: { username: remoteUsername || "Guest" },
                 }));
 
+                console.log("Username in connectToSocketServer:", username);
+
+
                 // Set up peer connection etc...
                 clients.forEach((socketListId) => {
-                    if(!connections[socketListId]) {
+                    // if(!connections[socketListId]) {
                     connections[socketListId] = new RTCPeerConnection(peerConfigConnections)
                     // Wait for their ice candidate       
                     connections[socketListId].onicecandidate = function (event) {
@@ -386,8 +440,7 @@ let getDisplayMediaSuccess = (stream) => {
                                 );
                                 videoRef.current = updatedVideos;
                                 // setParticipantCount(prev => prev + 1);
-                                return updatedVideos;   
-
+                                return updatedVideos;  
                             });
                         } else {
                             // Create a new video
@@ -402,30 +455,12 @@ let getDisplayMediaSuccess = (stream) => {
                             setVideos(videos => {
                                 const updatedVideos = [...videos, newVideo];
                                 videoRef.current = updatedVideos;
-                                setParticipantCount(prev => prev + 1);
+                                // setParticipantCount(prev => prev + 1);
                                 return updatedVideos;
                                 
                             });
                         }
                     };
-
-            //         connectionsRef.current[socketListId].onaddstream = (event) => {
-            //   // Check if video already exists
-            //   const videoExists = videos.some((video) => video.socketId === socketListId)
-
-            //   if (!videoExists) {
-            //     // Create a new video
-            //     const newVideo = {
-            //       socketId: socketListId,
-            //       stream: event.stream,
-            //       username: users[socketListId]?.username || "Guest",
-            //     }
-
-            //     setVideos((prevVideos) => [...prevVideos, newVideo])
-            //     setParticipantCount((prev) => prev + 1)
-            //   }
-            // }
-
 
                     // Add the local video stream
                     if (window.localStream !== undefined && window.localStream !== null) {
@@ -435,8 +470,8 @@ let getDisplayMediaSuccess = (stream) => {
                         window.localStream = blackSilence()
                         connections[socketListId].addStream(window.localStream)
                     }
-                }
-            })
+                    // }
+                })
 
                 if (id === socketIdRef.current) {
                     for (let id2 in connections) {
@@ -486,11 +521,11 @@ let getDisplayMediaSuccess = (stream) => {
     }
     let handleAudio = () => {
         
-        if (window.localStream) {
-      window.localStream.getAudioTracks().forEach((track) => {
-        track.enabled = !audio
-      })
-    }
+            if (window.localStream) {
+        window.localStream.getAudioTracks().forEach((track) => {
+            track.enabled = !audio
+        })
+        }
         setAudio(!audio)
         // getUserMedia();
     }
@@ -519,29 +554,10 @@ let getDisplayMediaSuccess = (stream) => {
     let closeChat = () => {
         setModal(false);
     }
-    // let handleMessage = (e) => {
-    //     setMessage(e.target.value);
-    // }
+    let handleMessage = (e) => {
+        setMessage(e.target.value);
+    }
 
-    // const addMessage = (data, sender, socketIdSender) => {
-    //     setMessages((prevMessages) => [
-    //         ...prevMessages,
-    //         { sender: sender, data: data }
-    //     ]);
-    //     if (socketIdSender !== socketIdRef.current) {
-    //         setNewMessages((prevNewMessages) => prevNewMessages + 1);
-    //     }
-    // };
-
-
-
-    // let sendMessage = () => {
-    //     console.log(socketRef.current);
-    //     socketRef.current.emit('chat-message', message, username)
-    //     setMessage("");
-
-    //     // this.setState({ message: "", sender: username })
-    // }
     const addMessage = (data, sender, socketIdSender) => {
     console.log("Adding message:", data, sender, socketIdSender)
 
@@ -557,18 +573,14 @@ let getDisplayMediaSuccess = (stream) => {
 
     console.log("Sending message:", message, username)
     socketRef.current.emit("chat-message", message, username)
-
-    // Add own message to chat
-    // addMessage(message, username, socketIdRef.current)
-
     setMessage("");
   }
     
     const connect = async (username) => {
         if (!username.trim()) {
-      alert("Please enter a username")
-      return
-    }
+            alert("Please enter a username")
+            return;
+        }
         setAskForUsername(false);
         setUsername(username);
 
@@ -580,8 +592,7 @@ let getDisplayMediaSuccess = (stream) => {
     return (
         <div>
 
-            {askForUsername ?(
-                
+            {askForUsername === true ?(
                 // entering the meeting
                 <LobbyComponent connect={connect} username={username} setUsername={setUsername} localVideoref={localVideoref} />
                 ):(
@@ -639,22 +650,18 @@ let getDisplayMediaSuccess = (stream) => {
                     </div>
 
 
-                    <video className={styles.meetUserVideo} ref={localVideoref} autoPlay muted></video>
-                    
-                    {/* {Object.entries(connections).map(([id, peer]) => (
-                        <div key={id} className="video-box">
-                            <video ref={localVideoref.current[id]} autoPlay playsInline />
-
-                            <div className="username">{users[id]?.username || "Unknown"}</div>
-                        </div>
-                    ))} */}
-
+                    <video 
+                    ref={localVideoref} autoPlay 
+                    muted
+                    className={styles.meetUserVideo}
+                    >
+                    </video>
 
                     <div className={styles.conferenceView}>
                         {videos.map((video) => (
-                            <div key={video.socketId}>
+                            <div key={video.socketId} className={styles.remoteVideoContainer}>
                                 <video
-
+                                    className={styles.remoteVideo}
                                     data-socket={video.socketId}
                                     ref={ref => {
                                         if (ref && video.stream) {
@@ -663,8 +670,13 @@ let getDisplayMediaSuccess = (stream) => {
                                     }}
                                     autoPlay
                                     playsInline
+                                    muted={video.isSelf}
                                 >
                                 </video>
+                                {!video.stream && (
+                                    <div className={styles.noStreamOverlay}>No video</div>
+                                )}
+
                                 <div className={styles.usernameOverlay}>{users[video.socketId]?.username || "Guest"}</div>
                             </div>
                         ))}

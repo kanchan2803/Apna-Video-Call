@@ -135,7 +135,7 @@ const ChatBox = ({
           variant="outlined"
           placeholder="Type a message"
           fullWidth
-          value={message}
+          value={message || ""}
           onChange={(e) => {
             setMessage(e.target.value);
             if(showEmojiPicker)
