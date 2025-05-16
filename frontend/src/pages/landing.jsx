@@ -1,4 +1,6 @@
 import React from 'react';
+import Footer from '../components/Footer';
+import FeaturesSection from '../components/FeaturesSection';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   AppBar,
@@ -127,6 +129,8 @@ export default function LandingPage() {
           
         </Grid>
       </Container>
+      <FeaturesSection />
+      <Footer />
     </div>
   );
 }

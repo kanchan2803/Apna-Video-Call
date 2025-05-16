@@ -10,12 +10,6 @@ const Footer = () => {
           <Typography variant="h6">Apna Video Call</Typography>
         </Grid>
         <Grid item>
-          <Link href="/about" color="inherit">About Us</Link>
-        </Grid>
-        <Grid item>
-          <Link href="/contact" color="inherit">Contact</Link>
-        </Grid>
-        <Grid item>
           <Typography variant="body2">© 2025 Apna Video Call</Typography>
         </Grid>
       </Grid>

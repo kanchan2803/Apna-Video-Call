@@ -1,9 +1,3 @@
-
-import Navbar from './components/Navbar';  // Add this import
-import HeroSection from './components/HeroSection';
-import FeaturesSection from './components/FeaturesSection';
-import Footer from './components/Footer';
-
 import './App.css';
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import LandingPage from './pages/landing';
