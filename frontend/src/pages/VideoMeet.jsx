@@ -19,6 +19,7 @@ import ChatBox from "../components/ChatBox"
 const server_url = server
 
 var connections = {}
+var dataChannels = {} // Store data channels for direct peer communication
 
 const peerConfigConnections = {
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
@@ -26,7 +27,7 @@ const peerConfigConnections = {
 
 export default function VideoMeetComponent() {
   var socketRef = useRef()
-  const [users, setUsers] = useState({})
+  const [usernames, setUsernames] = useState({})
   const socketIdRef = useRef()
 
   const localVideoref = useRef(null)
@@ -87,6 +88,137 @@ export default function VideoMeetComponent() {
       }
     }
   }, [])
+
+  // Send username to all peers via data channels
+  const broadcastUsername = () => {
+    console.log("Broadcasting username to all peers:", username)
+
+    // Store our own username
+    setUsernames((prev) => ({
+      ...prev,
+      [socketIdRef.current]: username,
+    }))
+
+    // Send to all connected peers
+    for (const id in dataChannels) {
+      if (dataChannels[id] && dataChannels[id].readyState === "open") {
+        try {
+          const message = JSON.stringify({
+            type: "username",
+            username: username,
+            id: socketIdRef.current,
+          })
+          dataChannels[id].send(message)
+          console.log("Sent username to peer:", id)
+        } catch (e) {
+          console.error("Error sending username to peer:", id, e)
+        }
+      }
+    }
+  }
+
+  // Create a data channel for a peer connection
+  const createDataChannel = (peerId, pc) => {
+    try {
+      console.log("Creating data channel for peer:", peerId)
+      const dataChannel = pc.createDataChannel("usernameChannel")
+
+      dataChannel.onopen = () => {
+        console.log("Data channel opened with peer:", peerId)
+        dataChannels[peerId] = dataChannel
+
+        // Send our username as soon as the channel opens
+        try {
+          const message = JSON.stringify({
+            type: "username",
+            username: username,
+            id: socketIdRef.current,
+          })
+          dataChannel.send(message)
+          console.log("Sent initial username to peer:", peerId)
+        } catch (e) {
+          console.error("Error sending initial username:", e)
+        }
+      }
+
+      dataChannel.onclose = () => {
+        console.log("Data channel closed with peer:", peerId)
+        delete dataChannels[peerId]
+      }
+
+      dataChannel.onerror = (error) => {
+        console.error("Data channel error with peer:", peerId, error)
+      }
+
+      dataChannel.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data)
+          if (data.type === "username") {
+            console.log("Received username from peer:", data.id, data.username)
+            setUsernames((prev) => ({
+              ...prev,
+              [data.id]: data.username,
+            }))
+          }
+        } catch (e) {
+          console.error("Error processing data channel message:", e)
+        }
+      }
+
+      return dataChannel
+    } catch (e) {
+      console.error("Error creating data channel:", e)
+      return null
+    }
+  }
+
+  // Handle incoming data channel
+  const handleDataChannel = (event, peerId) => {
+    const dataChannel = event.channel
+    console.log("Received data channel from peer:", peerId)
+
+    dataChannel.onopen = () => {
+      console.log("Received data channel opened with peer:", peerId)
+      dataChannels[peerId] = dataChannel
+
+      // Send our username as soon as the channel opens
+      try {
+        const message = JSON.stringify({
+          type: "username",
+          username: username,
+          id: socketIdRef.current,
+        })
+        dataChannel.send(message)
+        console.log("Sent username response to peer:", peerId)
+      } catch (e) {
+        console.error("Error sending username response:", e)
+      }
+    }
+
+    dataChannel.onclose = () => {
+      console.log("Received data channel closed with peer:", peerId)
+      delete dataChannels[peerId]
+    }
+
+    dataChannel.onerror = (error) => {
+      console.error("Received data channel error with peer:", peerId, error)
+    }
+
+    dataChannel.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data)
+        if (data.type === "username") {
+          console.log("Received username from peer:", data.id, data.username)
+          setUsernames((prev) => ({
+            ...prev,
+            [data.id]: data.username,
+          }))
+        }
+      } catch (e) {
+        console.error("Error processing received data channel message:", e)
+      }
+    }
+  }
 
   const getPermissions = async () => {
     try {
@@ -385,17 +517,20 @@ export default function VideoMeetComponent() {
 
     socketRef.current.on("connect", () => {
       console.log("Connected to socket server with ID:", socketRef.current.id)
-      console.log("Emitting join-call with username:", username)
 
       socketIdRef.current = socketRef.current.id
 
-      // Join the call with username - ensure username is properly sent
-      // Based on the socketManager.js, we need to send an object with path and username
-      console.log("Joining call with username:", username)
-      socketRef.current.emit("join-call", window.location.href, {
-        path: window.location.pathname,
-        username: username,
-      })
+      // Store our own username
+      setUsernames((prev) => ({
+        ...prev,
+        [socketRef.current.id]: username,
+      }))
+
+      // Send username to server
+      socketRef.current.emit("set-username", username)
+
+      // Join the call
+      socketRef.current.emit("join-call", window.location.pathname)
 
       // Handle chat messages
       socketRef.current.on("chat-message", addMessage)
@@ -405,7 +540,18 @@ export default function VideoMeetComponent() {
         console.log("User left:", id)
         setVideos((videos) => videos.filter((video) => video.socketId !== id))
 
-        // Clean up connection
+        // Remove username when user leaves
+        setUsernames((prev) => {
+          const newUsernames = { ...prev }
+          delete newUsernames[id]
+          return newUsernames
+        })
+
+        // Clean up connection and data channel
+        if (dataChannels[id]) {
+          delete dataChannels[id]
+        }
+
         if (connections[id]) {
           connections[id].close()
           delete connections[id]
@@ -413,42 +559,8 @@ export default function VideoMeetComponent() {
       })
 
       // Handle new user joining
-      socketRef.current.on("user-joined", (data, clients) => {
-        console.log("Raw user-joined data:", data)
-
-        let id, remoteUsername
-
-        // Extract username from data
-        if (typeof data === "object") {
-          if (data.id) {
-            id = data.id
-            remoteUsername = data.username
-          } else if (data.path) {
-            // Handle the format from socketManager.js
-            id = data
-            remoteUsername = data.username
-          } else {
-            id = data
-            remoteUsername = null
-          }
-        } else {
-          id = data
-          remoteUsername = null
-        }
-
-        console.log("Processed user joined:", id, "with username:", remoteUsername)
-
-        // Save the username - ensure it's not null or undefined
-        if (id && id !== socketIdRef.current) {
-          setUsers((prev) => {
-            const updatedUsers = {
-              ...prev,
-              [id]: { username: remoteUsername || "Guest" },
-            }
-            console.log("Updated users state:", updatedUsers)
-            return updatedUsers
-          })
-        }
+      socketRef.current.on("user-joined", (id, clients) => {
+        console.log("User joined:", id)
 
         // Set up peer connections for all clients
         clients.forEach((socketListId) => {
@@ -462,6 +574,19 @@ export default function VideoMeetComponent() {
           // Create new RTCPeerConnection
           connections[socketListId] = new RTCPeerConnection(peerConfigConnections)
 
+          // Create data channel for username exchange
+          if (socketListId !== socketIdRef.current) {
+            // Only create data channel if we're the initiator (to avoid both sides creating one)
+            if (id === socketIdRef.current) {
+              createDataChannel(socketListId, connections[socketListId])
+            }
+
+            // Handle incoming data channel
+            connections[socketListId].ondatachannel = (event) => {
+              handleDataChannel(event, socketListId)
+            }
+          }
+
           // Handle ICE candidates
           connections[socketListId].onicecandidate = (event) => {
             if (event.candidate != null) {
@@ -472,7 +597,7 @@ export default function VideoMeetComponent() {
           // Handle incoming stream
           connections[socketListId].onaddstream = (event) => {
             console.log("Received stream from:", socketListId)
-            console.log("Remote username for this stream:", users[socketListId]?.username || "Guest")
+            console.log("Username for this stream:", usernames[socketListId] || "Guest")
 
             // Check if we already have this video
             const existingVideoIndex = videos.findIndex((v) => v.socketId === socketListId)
@@ -651,6 +776,13 @@ export default function VideoMeetComponent() {
     await getMedia()
   }
 
+  // Broadcast username whenever it changes
+  useEffect(() => {
+    if (!askForUsername && username && socketRef.current) {
+      broadcastUsername()
+    }
+  }, [username, askForUsername])
+
   return (
     <div>
       {askForUsername === true ? (
@@ -705,13 +837,7 @@ export default function VideoMeetComponent() {
               </div>
 
               <div className={`${styles.localVideoContainer} ${showModal ? styles.chatOpen : ""}`}>
-                <video
-                  ref={localVideoref}
-                  autoPlay
-                  muted
-                  className={styles.meetUserVideo}
-                >
-                </video>
+                <video ref={localVideoref} autoPlay muted className={styles.meetUserVideo}></video>
                 <div className={styles.usernameOverlay}>{username || "You"} (You)</div>
               </div>
 
@@ -731,7 +857,7 @@ export default function VideoMeetComponent() {
                     ></video>
                     {!video.stream && <div className={styles.noStreamOverlay}>No video</div>}
 
-                    <div className={styles.usernameOverlay}>{users[video.socketId]?.username || "Guest"}</div>
+                    <div className={styles.usernameOverlay}>{usernames[video.socketId] || "Guest"}</div>
                   </div>
                 ))}
               </div>
