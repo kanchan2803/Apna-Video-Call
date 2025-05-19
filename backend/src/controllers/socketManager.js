@@ -1,5 +1,6 @@
 import { Server } from "socket.io"
-
+import dotenv from "dotenv";
+dotenv.config();
 
 let connections = {}
 let messages = {}
@@ -8,7 +9,7 @@ let timeOnline = {}
 export const connectToSocket = (server) => {
     const io = new Server(server, {
         cors: {
-            origin: "*",
+            origin: process.env.CLIENT_URL,
             methods: ["GET", "POST"],
             allowedHeaders: ["*"],
             credentials: true
@@ -28,10 +29,6 @@ export const connectToSocket = (server) => {
             connections[path].push(socket.id)
 
             timeOnline[socket.id] = new Date();
-
-            // connections[path].forEach(elem => {
-            //     io.to(elem)
-            // })
 
             for (let a = 0; a < connections[path].length; a++) {
                 io.to(connections[path][a]).emit("user-joined", socket.id, connections[path])
