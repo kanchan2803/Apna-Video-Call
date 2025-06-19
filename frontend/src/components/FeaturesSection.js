@@ -41,7 +41,7 @@ const FeaturesSection = () => {
         align="center"
         sx={{ color: '#555', maxWidth: 600, mx: 'auto', mb: 5 }}
       >
-        Apna Video Call brings you fast, secure, and effortless video communication — no matter where you are.
+        TalkKAST brings you fast, secure, and effortless video communication — no matter where you are.
       </Typography>
 
       <Grid container spacing={4} justifyContent="center" sx={{ px: { xs: 2, md: 10 } }}>
