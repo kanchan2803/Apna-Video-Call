@@ -7,10 +7,10 @@ const Footer = () => {
     <Box sx={{ backgroundColor: '#1976d2', color: 'white', padding: '20px 0' }}>
       <Grid container spacing={3} justifyContent="center">
         <Grid item>
-          <Typography variant="h6">Apna Video Call</Typography>
+          <Typography variant="h6">TalkKAST</Typography>
         </Grid>
         <Grid item>
-          <Typography variant="body2">© 2025 Apna Video Call</Typography>
+          <Typography variant="body2">© 2025 TalkKAST</Typography>
         </Grid>
       </Grid>
     </Box>
