@@ -22,7 +22,7 @@ export default function LandingPage() {
       {/* AppBar for Top Navigation */}
       <AppBar position="static" sx={{ backgroundColor: '#1976d2' }}>
         <Toolbar sx={{ justifyContent: 'space-between' }}>
-          <Typography variant="h6">Apna Video Call</Typography>
+          <Typography variant="h6">TalkKAST</Typography>
           <Box>
             <Button color="inherit" onClick={() => router('/aljk23')}>
               Join as Guest
@@ -94,7 +94,7 @@ export default function LandingPage() {
               />
 
               <Typography variant="h6" paragraph sx={{ marginTop: 2, color: 'blue' }} >
-                Cover the distance with Apna Video Call — simple, secure and smooth video calls for everyone.
+                Cover the distance with TalkKAST — simple, secure and smooth video calls for everyone.
               </Typography>
 
               <Button
