@@ -62,7 +62,7 @@ function HomeComponent() {
         alignItems: "center",
         color: "#ffffff"
       }}>
-        <h2 style={{ color: "#ffffff", margin: 0 }}>Apna Video Call</h2>
+        <h2 style={{ color: "#ffffff", margin: 0 }}>TalkKAST</h2>
 
         <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
           <IconButton onClick={() => navigate("/history")} style={{ color: "#ffffff" }}>
