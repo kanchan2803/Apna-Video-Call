@@ -1,4 +1,3 @@
-````markdown
 # TalkKAST 🎥💬
 
 A real-time video conferencing web application built using **WebRTC**, **Socket.IO**, and **Node.js**. TalkKAST enables users to create and join virtual rooms, engage in live video/audio calls, and collaborate instantly — no account or installation required.
